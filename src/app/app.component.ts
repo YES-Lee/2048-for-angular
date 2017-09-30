@@ -12,6 +12,13 @@ import { AppService } from './app.service';
 export class AppComponent implements OnInit {
 
   showArray: number[][];
+  /**
+   * 游戏状态
+   * code: -1, meaning: lose
+   * code: 0, meaning: gaming
+   * code: -1, meaning: win
+   */
+  gameStatus = 0;
   ngOnInit(): void {
     this.initGameData();
   }
@@ -63,6 +70,9 @@ export class AppComponent implements OnInit {
     } else {
       if (arr[po1.row][po1.column] === 0) {
         arr[po1.row][po1.column] = po1.value;
+        if (this.isFull(arr)) {
+
+        }
       }
       return arr;
     }
@@ -108,7 +118,10 @@ export class AppComponent implements OnInit {
         break;
       case 40: this.showArray = this.moveUpOrDown(this.showArray, 'down');
         break;
+      default:
+        break;
     }
+    this.checkStatus(this.showArray);
   }
 
   private moveUpOrDown(arr: Array<Array<number>>, type: string): Array<Array<number>> {
@@ -117,7 +130,8 @@ export class AppComponent implements OnInit {
     this.log(type);
     // return this.addNumber(this.moveRow(this.mergeRow(this.moveRow(arr, 'up'), 'up'), 'up'));
     arr = this.moveRow(this.mergeRow(this.moveRow(arr, type), type), type);
-    if (this.compareArray(backUpArr, arr)) {
+    const isChanged = this.compareArray(backUpArr, arr);
+    if (isChanged) {
       return arr;
     } else {
       return this.addNumber(arr);
@@ -297,6 +311,63 @@ export class AppComponent implements OnInit {
       }
     }
     return to;
+  }
+
+  private checkStatus(arr: Array<Array<number>>) {
+    const newArr = this.deepCopyArray(arr);
+    this.log('检查输赢');
+    this.checkLose(arr);
+    this.checkWin(arr);
+  }
+
+  private checkLose(arr: Array<Array<number>>): boolean {
+    let isLose = false;
+    if (this.isFull(arr)) {
+      // tslint:disable-next-line:forin
+      for (const row in arr) {
+        for (const col in arr[row]) {
+          if (arr.hasOwnProperty(+row + 1)) {
+            isLose = (arr[row][col] !== arr[+row + 1][col]);
+            if (!isLose) {
+              return false;
+            }
+          }
+        }
+      }
+      // tslint:disable-next-line:forin
+      for (const row in arr) {
+        for (const col in arr[row]) {
+          if (arr[row].hasOwnProperty(+col + 1)) {
+            isLose = (arr[row][col] !== arr[row][+col + 1]);
+            if (!isLose) {
+              return false;
+            }
+          }
+        }
+      }
+      this.gameStatus = -1;
+      setTimeout(() => {
+        this.gameAlert('game over');
+      }, 100);
+      return true;
+    }
+  }
+
+  private checkWin(arr: Array<Array<number>>) {
+    for (const row of arr) {
+      for (const item of row) {
+        if (item === 2048 && this.gameStatus === 0) {
+          this.gameStatus = 1;
+          setTimeout(() => {
+            this.gameAlert('you win!');
+          }, 100);
+        }
+      }
+    }
+  }
+
+  private gameAlert(msg: string) {
+    alert(msg);
   }
 
 }
