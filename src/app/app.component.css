@@ -1,0 +1,26 @@
+.game-container {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    margin: auto;
+}
+.game-body {
+    width: 160px;
+    height: 160px;
+    border: 1px solid gray;
+    background-color: #9e9e9e;
+}
+.item {
+    float: left;
+    width: 36px;
+    height: 36px;
+    text-align: center;
+    line-height: 40px;
+    padding: 2px;
+    background-color: #e9e9e9;
+    background-clip: content-box;
+}
