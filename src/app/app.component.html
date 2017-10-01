@@ -1,11 +1,17 @@
 <!--The content below is only a placeholder and can be replaced.-->
 <div class="game-container" (keyup) = "moveTo($event)">
   <div class="game-header">
-    <button (click)="initGameData()">重置</button>
+    <h1 class="title clearfix">2048</h1>
+    <h2 class="score">Scor：{{gameScore}}</h2>
+    <button class="btn-new-game" (click)="initGameData()">New Game</button>
   </div>
   <div class="game-body">
-    <div class="row" *ngFor="let items of showArray">
-      <div class="item" *ngFor="let item of items">{{item === 0 ? '' : item}}</div>
+    <div class="grid-row" *ngFor="let items of showArray">
+      <div class="grid-cell" *ngFor="let item of items" [ngStyle]="gridCellStyle(item)">
+        <span class="item-span animated zoomIn" *ngIf="item !== 0">
+          {{item}}
+        </span>
+      </div>
     </div>
   </div>
 </div>
