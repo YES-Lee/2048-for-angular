@@ -57,7 +57,7 @@
     width: 100%;
     height: 100%;
     line-height: 96px;
-    font-size: 3em;
+    /* font-size: 3em; */
     font-weight: bold;
     animation-duration: .5s;
     animation-delay: 0s;

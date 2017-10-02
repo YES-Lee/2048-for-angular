@@ -33,13 +33,14 @@ export class AppComponent implements OnInit {
   /**
    * 初始化数据
    */
-  private initGameData() {
+  initGameData() {
     this.showArray = this.deepCopyArray(this.gameMatrix);
     const po1 = this.generateRandomNumber();
     const po2 = this.generateRandomNumber();
     this.showArray[po1.row][po1.column] = po1.value;
     this.showArray[po2.row][po2.column] = po2.value;
     this.gameStatus = 0;
+    this.gameScore = 0;
   }
 
   /**
@@ -431,21 +432,28 @@ export class AppComponent implements OnInit {
   }
 
   gridCellStyle(item: number) {
+    let fontsize = '3em';
+    if (item >= 1024) {
+      fontsize = '2em';
+      if (item >= 16348) {
+        fontsize = '1.5em';
+      }
+    }
     switch (item) {
-      case 2: return { 'background-color': '#ffd180' };
-      case 4: return { 'background-color': '#ffab40' };
-      case 8: return { 'color': '#fff', 'background-color': '#ff9100' };
-      case 16: return { 'color': '#fff', 'background-color': '#ff6d00' };
-      case 32: return { 'color': '#fff', 'background-color': '#ffab91' };
-      case 64: return { 'color': '#fff', 'background-color': '#ff8a65' };
-      case 128: return { 'color': '#fff', 'background-color': '#ff7043' };
-      case 256: return { 'color': '#fff', 'background-color': '#ff5722' };
-      case 512: return { 'color': '#fff', 'background-color': '#f4511e' };
-      case 1024: return { 'color': '#fff', 'background-color': '#e64a19' };
-      case 2048: return { 'color': '#fff', 'background-color': '#d84315' };
-      case 4096: return { 'color': '#fff', 'background-color': '#bf360c' };
-      case 8192: return { 'color': '#fff', 'background-color': '#dd2c00' };
-      case 16384: return { 'color': '#fff', 'background-color': '#dd2c00' };
+      case 2: return { 'background-color': '#ffd180', 'font-size': fontsize };
+      case 4: return { 'background-color': '#ffab40', 'font-size': fontsize };
+      case 8: return { 'color': '#fff', 'background-color': '#ff9100', 'font-size': fontsize };
+      case 16: return { 'color': '#fff', 'background-color': '#ff6d00', 'font-size': fontsize };
+      case 32: return { 'color': '#fff', 'background-color': '#ffab91', 'font-size': fontsize };
+      case 64: return { 'color': '#fff', 'background-color': '#ff8a65', 'font-size': fontsize };
+      case 128: return { 'color': '#fff', 'background-color': '#ff7043', 'font-size': fontsize };
+      case 256: return { 'color': '#fff', 'background-color': '#ff5722', 'font-size': fontsize };
+      case 512: return { 'color': '#fff', 'background-color': '#f4511e', 'font-size': fontsize };
+      case 1024: return { 'color': '#fff', 'background-color': '#e64a19', 'font-size': fontsize };
+      case 2048: return { 'color': '#fff', 'background-color': '#d84315', 'font-size': fontsize };
+      case 4096: return { 'color': '#fff', 'background-color': '#bf360c', 'font-size': fontsize };
+      case 8192: return { 'color': '#fff', 'background-color': '#dd2c00', 'font-size': fontsize };
+      case 16384: return { 'color': '#fff', 'background-color': '#dd2c00', 'font-size': fontsize };
     }
   }
 
