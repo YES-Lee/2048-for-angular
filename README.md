@@ -1,4 +1,6 @@
-# LearnAngular
+# 2048 for Angular
+
+[See demo hear](http://joenlee.cn/2048-for-angular/)
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.2.6.
 
