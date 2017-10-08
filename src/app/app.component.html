@@ -7,9 +7,9 @@
   </div>
   <div class="game-body">
     <div class="grid-row" *ngFor="let items of showArray">
-      <div class="grid-cell" *ngFor="let item of items" [ngStyle]="gridCellStyle(item)">
-        <span class="item-span animated zoomIn" *ngIf="item !== 0">
-          {{item}}
+      <div class="grid-cell" *ngFor="let item of items" [ngStyle]="gridCellStyle(item.value)">
+        <span class="item-span animated" [ngClass]="{'zoomIn': item.isNew}" *ngIf="item.value !== 0">
+          {{item.value}}
         </span>
       </div>
     </div>
