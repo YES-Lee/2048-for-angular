@@ -1,8 +1,9 @@
-import { Component, Input, OnInit, HostListener } from '@angular/core';
+import { Component, Input, OnInit, HostListener, ViewChild, ElementRef, Renderer2 } from '@angular/core';
 import { Http } from '@angular/http';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import 'rxjs/add/operator/map'; // 引入map操作符 (可选)
 import { AppService } from './app.service';
+import { NumberItem, Position } from './model';
 
 @Component({
   selector: 'app-root',
@@ -10,6 +11,11 @@ import { AppService } from './app.service';
   styleUrls: ['app.component.css']
 })
 export class AppComponent implements OnInit {
+
+  @ViewChild('messageBox') messageBox: ElementRef;
+
+  isShowMsg = false;
+  msgContent: string;
 
   showArray: Array<Array<NumberItem>> = [[]];
   /**
@@ -26,6 +32,11 @@ export class AppComponent implements OnInit {
   //   [0, 0, 0, 0]
   // ];
   gameScore = 0;
+
+  constructor(
+    private renderer: Renderer2
+  ) {}
+
   ngOnInit(): void {
     this.initGameData();
     setTimeout(() => {
@@ -53,6 +64,16 @@ export class AppComponent implements OnInit {
     this.showArray[po2.row][po2.column].isNew = true;
     this.gameStatus = 0;
     this.gameScore = 0;
+  }
+
+  private showMsg(msg: string) {
+    this.msgContent = msg;
+    this.isShowMsg = true;
+  }
+
+  private hideMsg($event: Event) {
+    $event.stopPropagation();
+    this.isShowMsg = false;
   }
 
   /**
@@ -538,7 +559,7 @@ export class AppComponent implements OnInit {
    * @param msg 消息内容
    */
   private gameAlert(msg: string) {
-    alert(msg);
+    this.showMsg(msg);
   }
 
   /**
@@ -557,24 +578,3 @@ export class AppComponent implements OnInit {
   /*****utils*******************************************************************************/
 }
 
-export class NumberItem {
-  value: number;
-  isNew: boolean;
-
-  constructor(value: number, isNew: boolean) {
-    this.isNew = isNew;
-    this.value = value;
-  }
-}
-
-export class Position {
-  row: number;
-  column: number;
-  value: number;
-
-  constructor(row, col, value) {
-    this.row = row;
-    this.column = col;
-    this.value = value;
-  }
-}
