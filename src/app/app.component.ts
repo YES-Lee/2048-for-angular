@@ -373,7 +373,7 @@ export class AppComponent implements OnInit {
             if (arr[row].hasOwnProperty(colLangth - 1 - +col + step)) {
               const nextCol: number = colLangth - 1 - +col + step;
               const currentCol: number = colLangth - 1 - +col;
-              if (arr[row][nextCol].value === 0 || arr[row][nextCol] === arr[row][currentCol]) {
+              if (arr[row][nextCol].value === 0 || arr[row][nextCol].value === arr[row][currentCol].value) {
                 arr[row][currentCol].value += arr[row][nextCol].value;
                 if (arr[row][nextCol].value !== 0) { // 计入分数
                   this.gameScore += arr[row][currentCol].value;
