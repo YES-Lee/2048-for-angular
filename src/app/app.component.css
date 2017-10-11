@@ -64,6 +64,39 @@
     animation-iteration-count: 1;
 }
 
+.message-box {
+    position: fixed;
+    z-index: 9999;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.message-box>.message-body {
+    height: 100px;
+    width: 300px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    background-color: #ffd180;
+    border-radius: 6px;
+    background-clip: content-box;
+    border: 6px solid rgba(0, 0, 0, 0.3);
+}
+
+.message-box>.message-body>.message-content {
+    width: 100%;
+    height: 100%;
+    line-height: 100px;
+    text-align: center;
+    font-size: 1.5em;
+    color: #776e65;
+    font-weight: bold;
+}
+
 .clearfix:after{
     content: "";
     display: block;

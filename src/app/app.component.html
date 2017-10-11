@@ -15,3 +15,11 @@
     </div>
   </div>
 </div>
+
+<div class="message-box animated" (click)="hideMsg($event)" *ngIf="isShowMsg" #messageBox >
+  <div class="message-body">
+    <p class="message-content">{{msgContent}}</p>
+  </div>
+</div>
+
+<button (click)="showMsg()">弹窗测试</button>
