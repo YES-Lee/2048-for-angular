@@ -1,4 +1,4 @@
-*{margin:0;padding:0}body,html{height:100%;position:relative}@media (max-width:425px){body{padding:10px;overflow:hidden}}/*!
+*{margin:0;padding:0}body,html{height:100%;position:relative}@media (max-width:425px){body{padding:10px;height:unset;overflow:hidden}}/*!
  * animate.css -http://daneden.me/animate
  * Version - 3.5.1
  * Licensed under the MIT license - http://opensource.org/licenses/MIT
