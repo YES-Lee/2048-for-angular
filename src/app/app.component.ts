@@ -1,8 +1,9 @@
-import { Component, Input, OnInit, HostListener } from '@angular/core';
+import { Component, Input, OnInit, HostListener, ViewChild, ElementRef, Renderer2 } from '@angular/core';
 import { Http } from '@angular/http';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import 'rxjs/add/operator/map'; // 引入map操作符 (可选)
 import { AppService } from './app.service';
+import { NumberItem, Position, TouchPosition } from './model';
 
 @Component({
   selector: 'app-root',
@@ -11,43 +12,76 @@ import { AppService } from './app.service';
 })
 export class AppComponent implements OnInit {
 
-  showArray: number[][];
+  @ViewChild('messageBox') messageBox: ElementRef;
+
+  isShowMsg = false;
+  msgContent: string;
+  touchObj: TouchPosition = new TouchPosition;
+
+  showArray: Array<Array<NumberItem>> = [[]];
   /**
    * 游戏状态
    * code: -1, meaning: lose
    * code: 0, meaning: gaming
-   * code: -1, meaning: win
+   * code: 1, meaning: win
    */
   gameStatus = 0;
-  gameMatrix = [
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0]
-  ];
+  // gameMatrix = [
+  //   [0, 0, 0, 0],
+  //   [0, 0, 0, 0],
+  //   [0, 0, 0, 0],
+  //   [0, 0, 0, 0]
+  // ];
   gameScore = 0;
+
+  constructor(
+    private renderer: Renderer2
+  ) { }
+
   ngOnInit(): void {
     this.initGameData();
+    setTimeout(() => {
+      this.setNotNew();
+    }, 500);
   }
 
   /**
    * 初始化数据
    */
   initGameData() {
-    this.showArray = this.deepCopyArray(this.gameMatrix);
+    for (let row = 0; row < 4; row++) {
+      const r: Array<NumberItem> = [];
+      for (let col = 0; col < 4; col++) {
+        r.push(new NumberItem(0, false));
+      }
+      this.showArray[row] = r;
+    }
+    this.log(this.showArray);
     const po1 = this.generateRandomNumber();
     const po2 = this.generateRandomNumber();
-    this.showArray[po1.row][po1.column] = po1.value;
-    this.showArray[po2.row][po2.column] = po2.value;
+    this.showArray[po1.row][po1.column].value = po1.value;
+    this.showArray[po1.row][po1.column].isNew = true;
+    this.showArray[po2.row][po2.column].value = po2.value;
+    this.showArray[po2.row][po2.column].isNew = true;
     this.gameStatus = 0;
     this.gameScore = 0;
+  }
+
+  private showMsg(msg: string) {
+    this.msgContent = msg;
+    this.isShowMsg = true;
+  }
+
+  private hideMsg($event: Event) {
+    $event.stopPropagation();
+    this.isShowMsg = false;
   }
 
   /**
    * 每次操作新增1-2个数字
    * @param arr 矩阵
    */
-  private addNumber(arr: Array<Array<number>>): Array<Array<number>> {
+  private addNumber(arr: Array<Array<NumberItem>>): Array<Array<NumberItem>> {
     this.log('addNumber');
     if (this.isFull(arr)) {
       this.log('matrix is full!');
@@ -55,11 +89,12 @@ export class AppComponent implements OnInit {
     }
     const po1 = this.generateRandomNumber();
     // const po2 = this.generateRandomNumber();
-    if (arr[po1.row][po1.column] !== 0) {
+    if (arr[po1.row][po1.column].value !== 0) {
       return this.addNumber(arr); // 改个位置都不为0则重新操作
     } else {
-      if (arr[po1.row][po1.column] === 0) {
-        arr[po1.row][po1.column] = po1.value;
+      if (arr[po1.row][po1.column].value === 0) {
+        arr[po1.row][po1.column].value = po1.value;
+        arr[po1.row][po1.column].isNew = true;
       }
       return arr;
     }
@@ -82,10 +117,10 @@ export class AppComponent implements OnInit {
    * 判断矩阵是否填满
    * @param arr 矩阵
    */
-  private isFull(arr: Array<Array<number>>): boolean {
+  private isFull(arr: Array<Array<NumberItem>>): boolean {
     for (const rows of arr) {
       for (const item of rows) {
-        if (item === 0) {
+        if (item.value === 0) {
           return false;
         }
       }
@@ -112,9 +147,89 @@ export class AppComponent implements OnInit {
         default:
           break;
       }
+      setTimeout(() => {
+        this.setNotNew();
+      }, 500);
       this.checkStatus(this.showArray);
     } else {
       return;
+    }
+  }
+
+  @HostListener('window:touchstart', ['$event'])
+  private touchStart(e) {
+    if (this.gameStatus !== -1) {
+      e.stopPropagation();
+      this.touchObj.startX = e.touches[0].screenX;
+      this.touchObj.startY = e.touches[0].screenY;
+      // console.log('起点位置：', e.touches[0].screenX, e.touches[0].screenY);
+    }
+  }
+
+  @HostListener('window:touchmove', ['$event'])
+  private touchMove(e) {
+    if (this.gameStatus !== -1) {
+      e.stopPropagation();
+      this.touchObj.endX = e.touches[0].screenX;
+      this.touchObj.endY = e.touches[0].screenY;
+      // console.log('终点位置：', e.touches[0].screenX, e.touches[0].screenY);
+    }
+  }
+
+  @HostListener('window:touchend', ['$event'])
+  private touchEnd(e) {
+    if (this.gameStatus !== -1) {
+      const moveX = this.touchObj.endX - this.touchObj.startX;
+      const moveY = this.touchObj.endY - this.touchObj.startY;
+
+      if (moveX > 0) {
+        const tan = moveY / moveX;
+        if (tan >= -1 && tan <= 1) {
+          this.touchObj.moveDirection = 'right';
+        } else if (tan > 1) {
+          this.touchObj.moveDirection = 'down';
+        } else if (tan < -1) {
+          this.touchObj.moveDirection = 'up';
+        }
+      }
+
+      if (moveX < 0) {
+        const tan = moveY / moveX;
+        if (tan >= -1 && tan <= 1) {
+          this.touchObj.moveDirection = 'left';
+        } else if (tan > 1) {
+          this.touchObj.moveDirection = 'up';
+        } else if (tan < -1) {
+          this.touchObj.moveDirection = 'down';
+        }
+      }
+
+      if (moveX === 0) {
+        if (moveY > 0) {
+          this.touchObj.moveDirection = 'down';
+        } else {
+          this.touchObj.moveDirection = 'up';
+        }
+      }
+
+      console.log(this.touchObj);
+      switch (this.touchObj.moveDirection) {
+        case 'left': this.showArray = this.moveLeftOrRight(this.showArray, 'left');
+          break;
+        case 'up': this.showArray = this.moveUpOrDown(this.showArray, 'up');
+          break;
+        case 'right': this.showArray = this.moveLeftOrRight(this.showArray, 'right');
+          break;
+        case 'down': this.showArray = this.moveUpOrDown(this.showArray, 'down');
+          break;
+        default:
+          break;
+      }
+      setTimeout(() => {
+        this.setNotNew();
+      }, 500);
+      this.checkStatus(this.showArray);
+      this.touchObj = new TouchPosition;
     }
   }
 
@@ -123,7 +238,7 @@ export class AppComponent implements OnInit {
    * @param arr 矩阵
    * @param type up/down
    */
-  private moveUpOrDown(arr: Array<Array<number>>, type: string): Array<Array<number>> {
+  private moveUpOrDown(arr: Array<Array<NumberItem>>, type: string): Array<Array<NumberItem>> {
     this.log('up');
     const backUpArr = this.deepCopyArray(arr);
     this.log(type);
@@ -142,7 +257,7 @@ export class AppComponent implements OnInit {
    * @param arr 矩阵
    * @param type left/right
    */
-  private moveLeftOrRight(arr: Array<Array<number>>, type: string): Array<Array<number>> {
+  private moveLeftOrRight(arr: Array<Array<NumberItem>>, type: string): Array<Array<NumberItem>> {
     this.log('up');
     const backUpArr = this.deepCopyArray(arr);
     this.log(type);
@@ -160,7 +275,7 @@ export class AppComponent implements OnInit {
    * @param type up/down
    * @param currentStep 不传
    */
-  private moveRow(arr: Array<Array<number>>, type: string, currentStep: number = 1): Array<Array<number>> {
+  private moveRow(arr: Array<Array<NumberItem>>, type: string, currentStep: number = 1): Array<Array<NumberItem>> {
     const rowsLangth = arr.length;
     if (currentStep === rowsLangth) {
       return arr;
@@ -178,9 +293,9 @@ export class AppComponent implements OnInit {
         if (arr.hasOwnProperty(+row + step)) {
           const lastRow: number = +row + step;
           const currentRow: number = +row;
-          if (arr[lastRow][col] === 0) {
-            arr[lastRow][col] = arr[currentRow][col];
-            arr[currentRow][col] = 0;
+          if (arr[lastRow][col].value === 0) {
+            arr[lastRow][col].value = arr[currentRow][col].value;
+            arr[currentRow][col].value = 0;
           }
         }
       }
@@ -195,7 +310,7 @@ export class AppComponent implements OnInit {
    * @param type up/down
    * @param currentStep 不传
    */
-  private mergeRow(arr: Array<Array<number>>, type: string, currentStep: number = 1): Array<Array<number>> {
+  private mergeRow(arr: Array<Array<NumberItem>>, type: string, currentStep: number = 1): Array<Array<NumberItem>> {
     this.log('mergeRow');
     const rowsLangth = arr.length;
     if (currentStep === rowsLangth) {
@@ -210,12 +325,12 @@ export class AppComponent implements OnInit {
             if (arr.hasOwnProperty(+row + step)) {
               const nextRow: number = +row + step;
               const currentRow: number = +row;
-              if (arr[nextRow][col] === 0 || arr[nextRow][col] === arr[currentRow][col]) {
-                arr[currentRow][col] += arr[nextRow][col];
-                if (arr[nextRow][col] !== 0) { // 计入分数
-                  this.gameScore += arr[currentRow][col];
+              if (arr[nextRow][col].value === 0 || arr[nextRow][col].value === arr[currentRow][col].value) {
+                arr[currentRow][col].value += arr[nextRow][col].value;
+                if (arr[nextRow][col].value !== 0) { // 计入分数
+                  this.gameScore += arr[currentRow][col].value;
                 }
-                arr[nextRow][col] = 0;
+                arr[nextRow][col].value = 0;
               }
             }
           }
@@ -230,12 +345,12 @@ export class AppComponent implements OnInit {
             if (arr.hasOwnProperty(rowsLangth - 1 - +row + step)) {
               const nextRow: number = rowsLangth - 1 - +row + step;
               const currentRow: number = rowsLangth - 1 - +row;
-              if (arr[nextRow][col] === 0 || arr[nextRow][col] === arr[currentRow][col]) {
-                arr[currentRow][col] += arr[nextRow][col];
-                if (arr[nextRow][col] !== 0) { // 计入分数
-                  this.gameScore += arr[currentRow][col];
+              if (arr[nextRow][col].value === 0 || arr[nextRow][col].value === arr[currentRow][col].value) {
+                arr[currentRow][col].value += arr[nextRow][col].value;
+                if (arr[nextRow][col].value !== 0) { // 计入分数
+                  this.gameScore += arr[currentRow][col].value;
                 }
-                arr[nextRow][col] = 0;
+                arr[nextRow][col].value = 0;
               }
             }
           }
@@ -266,7 +381,7 @@ export class AppComponent implements OnInit {
    * @param type left/right
    * @param currentStep 不传
    */
-  private moveCol(arr: Array<Array<number>>, type: string, currentStep: number = 1): Array<Array<number>> {
+  private moveCol(arr: Array<Array<NumberItem>>, type: string, currentStep: number = 1): Array<Array<NumberItem>> {
     const colLangth = arr[0].length;
     if (currentStep === colLangth) {
       return arr;
@@ -284,9 +399,9 @@ export class AppComponent implements OnInit {
         if (arr[row].hasOwnProperty(+col + step)) {
           const lastCol: number = +col + step;
           const currentCol: number = +col;
-          if (arr[row][lastCol] === 0) {
-            arr[row][lastCol] = arr[row][currentCol];
-            arr[row][currentCol] = 0;
+          if (arr[row][lastCol].value === 0) {
+            arr[row][lastCol].value = arr[row][currentCol].value;
+            arr[row][currentCol].value = 0;
           }
         }
       }
@@ -301,7 +416,7 @@ export class AppComponent implements OnInit {
    * @param type left/right
    * @param currentStep 不传
    */
-  private mergeCol(arr: Array<Array<number>>, type: string, currentStep: number = 1): Array<Array<number>> {
+  private mergeCol(arr: Array<Array<NumberItem>>, type: string, currentStep: number = 1): Array<Array<NumberItem>> {
     this.log('mergeCol');
     const colLangth = arr[0].length;
     if (currentStep === colLangth) {
@@ -316,12 +431,12 @@ export class AppComponent implements OnInit {
             if (arr[row].hasOwnProperty(+col + step)) {
               const nextCol: number = +col + step;
               const currentCol: number = +col;
-              if (arr[row][nextCol] === 0 || arr[row][nextCol] === arr[row][currentCol]) {
-                arr[row][currentCol] += arr[row][nextCol];
-                if (arr[row][nextCol] !== 0) { // 计入分数
-                  this.gameScore += arr[row][currentCol];
+              if (arr[row][nextCol].value === 0 || arr[row][nextCol].value === arr[row][currentCol].value) {
+                arr[row][currentCol].value += arr[row][nextCol].value;
+                if (arr[row][nextCol].value !== 0) { // 计入分数
+                  this.gameScore += arr[row][currentCol].value;
                 }
-                arr[row][nextCol] = 0;
+                arr[row][nextCol].value = 0;
               }
             }
           }
@@ -336,12 +451,12 @@ export class AppComponent implements OnInit {
             if (arr[row].hasOwnProperty(colLangth - 1 - +col + step)) {
               const nextCol: number = colLangth - 1 - +col + step;
               const currentCol: number = colLangth - 1 - +col;
-              if (arr[row][nextCol] === 0 || arr[row][nextCol] === arr[row][currentCol]) {
-                arr[row][currentCol] += arr[row][nextCol];
-                if (arr[row][nextCol] !== 0) { // 计入分数
-                  this.gameScore += arr[row][currentCol];
+              if (arr[row][nextCol].value === 0 || arr[row][nextCol].value === arr[row][currentCol].value) {
+                arr[row][currentCol].value += arr[row][nextCol].value;
+                if (arr[row][nextCol].value !== 0) { // 计入分数
+                  this.gameScore += arr[row][currentCol].value;
                 }
-                arr[row][nextCol] = 0;
+                arr[row][nextCol].value = 0;
               }
             }
           }
@@ -370,7 +485,7 @@ export class AppComponent implements OnInit {
    * 检查输赢
    * @param arr 矩阵
    */
-  private checkStatus(arr: Array<Array<number>>) {
+  private checkStatus(arr: Array<Array<NumberItem>>) {
     const newArr = this.deepCopyArray(arr);
     this.log('检查输赢');
     this.checkLose(arr);
@@ -381,14 +496,14 @@ export class AppComponent implements OnInit {
    * 检查是否输
    * @param arr 矩阵
    */
-  private checkLose(arr: Array<Array<number>>): boolean {
+  private checkLose(arr: Array<Array<NumberItem>>): boolean {
     let isLose = false;
     if (this.isFull(arr)) {
       // tslint:disable-next-line:forin
       for (const row in arr) {
         for (const col in arr[row]) {
           if (arr.hasOwnProperty(+row + 1)) {
-            isLose = (arr[row][col] !== arr[+row + 1][col]);
+            isLose = (arr[row][col].value !== arr[+row + 1][col].value);
             if (!isLose) {
               return false;
             }
@@ -399,7 +514,7 @@ export class AppComponent implements OnInit {
       for (const row in arr) {
         for (const col in arr[row]) {
           if (arr[row].hasOwnProperty(+col + 1)) {
-            isLose = (arr[row][col] !== arr[row][+col + 1]);
+            isLose = (arr[row][col].value !== arr[row][+col + 1].value);
             if (!isLose) {
               return false;
             }
@@ -418,10 +533,10 @@ export class AppComponent implements OnInit {
    * 检查是否赢
    * @param arr 矩阵
    */
-  private checkWin(arr: Array<Array<number>>) {
+  private checkWin(arr: Array<Array<NumberItem>>) {
     for (const row of arr) {
       for (const item of row) {
-        if (item === 2048 && this.gameStatus === 0) {
+        if (item.value === 2048 && this.gameStatus === 0) {
           this.gameStatus = 1;
           setTimeout(() => {
             this.gameAlert('you win!');
@@ -431,6 +546,18 @@ export class AppComponent implements OnInit {
     }
   }
 
+  private setNotNew() {
+    for (const rows of this.showArray) {
+      for (const item of rows) {
+        item.isNew = false;
+      }
+    }
+  }
+
+  /**
+   * 控制颜色
+   * @param item item
+   */
   gridCellStyle(item: number) {
     let fontsize = '3em';
     if (item >= 1024) {
@@ -461,7 +588,7 @@ export class AppComponent implements OnInit {
   /**
    * 比较矩阵
    */
-  private compareArray(arr1: Array<Array<number>>, arr2: Array<Array<number>>): boolean {
+  private compareArray(arr1: Array<Array<NumberItem>>, arr2: Array<Array<NumberItem>>): boolean {
     this.log('compareArray');
     this.log(arr1);
     this.log(arr2);
@@ -474,7 +601,7 @@ export class AppComponent implements OnInit {
     for (const row in arr1) {
       // tslint:disable-next-line:forin
       for (const col in arr1[row]) {
-        if (arr1[row][col] !== arr2[row][col]) {
+        if (arr1[row][col].value !== arr2[row][col].value) {
           this.log(false);
           return false;
         }
@@ -488,7 +615,7 @@ export class AppComponent implements OnInit {
    * 深度复制矩阵
    * @param from 源矩阵
    */
-  private deepCopyArray(from: Array<Array<number>>) {
+  private deepCopyArray(from: Array<Array<NumberItem>>) {
     this.log('deepCopyArray');
     // tslint:disable-next-line:forin
     // const to = [[]];
@@ -500,7 +627,7 @@ export class AppComponent implements OnInit {
     // }
     return from.map(items => {
       return items.map(item => {
-        return item;
+        return new NumberItem(item.value, false);
       });
     });
   }
@@ -510,7 +637,7 @@ export class AppComponent implements OnInit {
    * @param msg 消息内容
    */
   private gameAlert(msg: string) {
-    alert(msg);
+    this.showMsg(msg);
   }
 
   /**
@@ -528,14 +655,4 @@ export class AppComponent implements OnInit {
   }
   /*****utils*******************************************************************************/
 }
-export class Position {
-  row: number;
-  column: number;
-  value: number;
 
-  constructor(row, col, value) {
-    this.row = row;
-    this.column = col;
-    this.value = value;
-  }
-}

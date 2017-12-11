@@ -1,9 +1,20 @@
 /* You can add global styles to this file, and also import other style files */
+
 * {
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
 }
-html, body {
-    height: 100%;
-    position: relative;
+
+html,
+body {
+  height: 100%;
+  position: relative;
+}
+
+@media all and (max-width: 425px) {
+  body {
+    padding: 10px;
+    height: unset;
+    overflow: hidden;
+  }
 }
