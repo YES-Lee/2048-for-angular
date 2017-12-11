@@ -1,9 +1,11 @@
 <!--The content below is only a placeholder and can be replaced.-->
-<div class="game-container" (keyup) = "moveTo($event)">
+<div class="game-container" (keyup)="moveTo($event)">
   <div class="game-header">
     <h1 class="title clearfix">2048</h1>
-    <h2 class="score">Scor：{{gameScore}}</h2>
-    <button class="btn-new-game" (click)="initGameData()">New Game</button>
+    <div class="game-controll">
+      <h2 class="score">Scor：{{gameScore}}</h2>
+      <button class="btn-new-game" (click)="initGameData()" (touchStart)="initGameData();">New Game</button>
+    </div>
   </div>
   <div class="game-body">
     <div class="grid-row" *ngFor="let items of showArray">
@@ -16,7 +18,7 @@
   </div>
 </div>
 
-<div class="message-box animated" (click)="hideMsg($event)" *ngIf="isShowMsg" #messageBox >
+<div class="message-box animated" (click)="hideMsg($event)" *ngIf="isShowMsg" #messageBox>
   <div class="message-body">
     <p class="message-content">{{msgContent}}</p>
   </div>

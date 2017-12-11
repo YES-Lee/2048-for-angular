@@ -19,3 +19,11 @@ export class Position {
         this.value = value;
     }
 }
+
+export class TouchPosition {
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    moveDirection: string;
+}

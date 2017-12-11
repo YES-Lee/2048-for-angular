@@ -3,7 +3,7 @@ import { Http } from '@angular/http';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import 'rxjs/add/operator/map'; // 引入map操作符 (可选)
 import { AppService } from './app.service';
-import { NumberItem, Position } from './model';
+import { NumberItem, Position, TouchPosition } from './model';
 
 @Component({
   selector: 'app-root',
@@ -16,6 +16,7 @@ export class AppComponent implements OnInit {
 
   isShowMsg = false;
   msgContent: string;
+  touchObj: TouchPosition = new TouchPosition;
 
   showArray: Array<Array<NumberItem>> = [[]];
   /**
@@ -35,12 +36,12 @@ export class AppComponent implements OnInit {
 
   constructor(
     private renderer: Renderer2
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.initGameData();
     setTimeout(() => {
-    this.setNotNew();
+      this.setNotNew();
     }, 500);
   }
 
@@ -48,9 +49,9 @@ export class AppComponent implements OnInit {
    * 初始化数据
    */
   initGameData() {
-    for (let row = 0; row < 4; row ++) {
+    for (let row = 0; row < 4; row++) {
       const r: Array<NumberItem> = [];
-      for (let col = 0; col < 4; col ++) {
+      for (let col = 0; col < 4; col++) {
         r.push(new NumberItem(0, false));
       }
       this.showArray[row] = r;
@@ -148,11 +149,83 @@ export class AppComponent implements OnInit {
       }
       setTimeout(() => {
         this.setNotNew();
-        }, 500);
+      }, 500);
       this.checkStatus(this.showArray);
     } else {
       return;
     }
+  }
+
+  @HostListener('window:touchstart', ['$event'])
+  private touchStart(e) {
+    e.stopPropagation();
+    this.touchObj.startX = e.touches[0].screenX;
+    this.touchObj.startY = e.touches[0].screenY;
+    // console.log('起点位置：', e.touches[0].screenX, e.touches[0].screenY);
+  }
+
+  @HostListener('window:touchmove', ['$event'])
+  private touchMove(e) {
+    e.stopPropagation();
+    this.touchObj.endX = e.touches[0].screenX;
+    this.touchObj.endY = e.touches[0].screenY;
+    // console.log('终点位置：', e.touches[0].screenX, e.touches[0].screenY);
+  }
+
+  @HostListener('window:touchend', ['$event'])
+  private touchEnd(e) {
+    e.stopPropagation();
+    const moveX = this.touchObj.endX - this.touchObj.startX;
+    const moveY = this.touchObj.endY - this.touchObj.startY;
+
+    if (moveX > 0) {
+      const tan = moveY / moveX;
+      if (tan >= -1 && tan <= 1) {
+        this.touchObj.moveDirection = 'right';
+      } else if (tan > 1) {
+        this.touchObj.moveDirection = 'down';
+      } else if (tan < -1) {
+        this.touchObj.moveDirection = 'up';
+      }
+    }
+
+    if (moveX < 0) {
+      const tan = moveY / moveX;
+      if (tan >= -1 && tan <= 1) {
+        this.touchObj.moveDirection = 'left';
+      } else if (tan > 1) {
+        this.touchObj.moveDirection = 'up';
+      } else if (tan < -1) {
+        this.touchObj.moveDirection = 'down';
+      }
+    }
+
+    if (moveX === 0) {
+      if (moveY > 0) {
+        this.touchObj.moveDirection = 'down';
+      } else {
+        this.touchObj.moveDirection = 'up';
+      }
+    }
+
+    console.log(this.touchObj);
+    switch (this.touchObj.moveDirection) {
+      case 'left': this.showArray = this.moveLeftOrRight(this.showArray, 'left');
+        break;
+      case 'up': this.showArray = this.moveUpOrDown(this.showArray, 'up');
+        break;
+      case 'right': this.showArray = this.moveLeftOrRight(this.showArray, 'right');
+        break;
+      case 'down': this.showArray = this.moveUpOrDown(this.showArray, 'down');
+        break;
+      default:
+        break;
+    }
+    setTimeout(() => {
+      this.setNotNew();
+    }, 500);
+    this.checkStatus(this.showArray);
+    this.touchObj = new TouchPosition;
   }
 
   /**
