@@ -64,6 +64,7 @@
   }
   .message-box {
     position: fixed;
+    top: 0;
     z-index: 9999;
     width: 100%;
     height: 100%;
@@ -164,6 +165,7 @@
   }
   .message-box {
     position: fixed;
+    top: 0;
     z-index: 9999;
     width: 100%;
     height: 100%;
@@ -195,20 +197,21 @@
 }
 
 @media all and (max-width: 320px) {
-    .item-span {
-        line-height: 62px;
-    }
-    .grid-cell {
-        height: 62px;
-    }
+  .item-span {
+    line-height: 62px;
+  }
+  .grid-cell {
+    height: 62px;
+  }
 }
+
 @media all and (max-width: 375px) {
-    .item-span {
-        line-height: 78px;
-    }
-    .grid-cell {
-        height: 78px;
-    }
+  .item-span {
+    line-height: 78px;
+  }
+  .grid-cell {
+    height: 78px;
+  }
 }
 
 .clearfix:after {
